@@ -1,6 +1,7 @@
 package de.seuhd.campuscoffee.domain.implementation;
 
 import de.seuhd.campuscoffee.domain.configuration.ApprovalConfiguration;
+import de.seuhd.campuscoffee.domain.exceptions.NotFoundException;
 import de.seuhd.campuscoffee.domain.exceptions.ValidationException;
 import de.seuhd.campuscoffee.domain.model.objects.Pos;
 import de.seuhd.campuscoffee.domain.model.objects.Review;
@@ -75,21 +76,42 @@ public class ReviewServiceImpl extends CrudServiceImpl<Review, Long> implements 
 
         // validate that the user exists
         // TODO: Implement the required business logic here
-        
+        try {
+            userDataService.getById(userId);
+        } catch (NotFoundException e) {
+            log.error("No User with given Id");
+            throw new ValidationException("Tryed to approve with a non existing user ID");
+        }
 
         // validate that the review exists
         // TODO: Implement the required business logic here
+        List<Review> reviewList = reviewDataService.getAll();
+
+        if (!reviewList.contains(review)){
+            throw new ValidationException("review to approve was not in the list of all reviews");
+        }
 
         // a user cannot approve their own review
         // TODO: Implement the required business logic here
+        if (review.author() == userDataService.getById(userId)) {
+            log.error("Users cant't approve there own review");
+            throw new ValidationException("User tryed to approve there own review");
+        }
 
         // increment approval count
         // TODO: Implement the required business logic here
-
         // update approval status to determine if the review now reaches the approval quorum
         // TODO: Implement the required business logic here
+        Integer newapprovalcount = review.approvalCount() + 1;
+        Boolean newapproved = (newapprovalcount >= approvalConfiguration.minCount());
 
-        return reviewDataService.upsert(review);
+        Review newReview = review.toBuilder()
+                                    .approvalCount(newapprovalcount)
+                                    .approved(newapproved)
+                                    .build();
+        
+
+        return reviewDataService.upsert(newReview);
     }
 
     /**
