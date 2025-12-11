@@ -29,7 +29,7 @@ public record ReviewDto (
     @NotBlank(message = "review cannot be empty.")
     @NonNull String review,
 
-    @Nullable boolean approved
+    @Nullable Boolean approved
 
 ) implements Dto<Long> {
     @Override
