@@ -29,4 +29,6 @@ public abstract class ReviewDtoMapper implements DtoMapper<Review, ReviewDto> {
 //    @Mapping(target = "approved", constant = "false")
 //    @Mapping(target = "approvalCount", constant = "0")
 //    public abstract Review toDomain(ReviewDto source);
+    
+    
 }

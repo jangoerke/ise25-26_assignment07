@@ -107,7 +107,9 @@ public class ReviewController extends CrudController<Review, ReviewDto, Long> {
         @RequestParam ( " approved " ) Boolean approved
     ) {
         return ResponseEntity.ok(
-                reviewDtoMapper.fromDomain(reviewService.filter(posId, approved))
+            reviewService.filter(posId, approved).stream()
+                    .map(reviewDtoMapper::fromDomain)
+                    .toList()
         );
     }
 
