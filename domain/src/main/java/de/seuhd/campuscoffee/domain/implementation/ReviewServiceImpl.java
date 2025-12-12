@@ -52,6 +52,8 @@ public class ReviewServiceImpl extends CrudServiceImpl<Review, Long> implements 
     public @NonNull Review upsert(@NonNull Review review) {
         // TODO: Implement the missing business logic here
         // check if the use already posted an review.
+        posDataService.getById(review.pos().getId());
+
         User author = review.author();
         Pos pos = review.pos();
 
@@ -76,24 +78,18 @@ public class ReviewServiceImpl extends CrudServiceImpl<Review, Long> implements 
 
         // validate that the user exists
         // TODO: Implement the required business logic here
-        try {
-            userDataService.getById(userId);
-        } catch (NotFoundException e) {
-            log.error("No User with given Id");
-            throw new ValidationException("Tryed to approve with a non existing user ID");
-        }
+        
+        userDataService.getById(userId);
+        
 
         // validate that the review exists
         // TODO: Implement the required business logic here
-        List<Review> reviewList = reviewDataService.getAll();
-
-        if (!reviewList.contains(review)){
-            throw new ValidationException("review to approve was not in the list of all reviews");
-        }
+        
+        reviewDataService.getById(review.getId());
 
         // a user cannot approve their own review
         // TODO: Implement the required business logic here
-        if (review.author() == userDataService.getById(userId)) {
+        if (review.author().getId().equals(userId)) {
             log.error("Users cant't approve there own review");
             throw new ValidationException("User tryed to approve there own review");
         }
@@ -103,13 +99,14 @@ public class ReviewServiceImpl extends CrudServiceImpl<Review, Long> implements 
         // update approval status to determine if the review now reaches the approval quorum
         // TODO: Implement the required business logic here
         Integer newapprovalcount = review.approvalCount() + 1;
-        Boolean newapproved = (newapprovalcount >= approvalConfiguration.minCount());
+        
 
         Review newReview = review.toBuilder()
                                     .approvalCount(newapprovalcount)
-                                    .approved(newapproved)
                                     .build();
+    
         
+        newReview = updateApprovalStatus(newReview);
 
         return reviewDataService.upsert(newReview);
     }
